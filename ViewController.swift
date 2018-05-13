@@ -17,6 +17,8 @@ class ViewController: UIViewController {
                     color: [#colorLiteral(red: 1, green: 0.1491314173, blue: 0, alpha: 1), #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1), #colorLiteral(red: 0.01680417731, green: 0.1983509958, blue: 1, alpha: 1)],
                     shape: ["▲","●","■"])
     
+    // This is the rework
+    
     @IBOutlet var cardButtons: [UIButton]!
     
     @IBOutlet weak var scoreLabel: UILabel!
