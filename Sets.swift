@@ -56,7 +56,6 @@ class Sets {
             }
         }
     }
-    
     private func removeMatchedCards() {
         for index in matchedCards.indices {
             if displayedCards.contains(matchedCards[index]) {
@@ -64,7 +63,6 @@ class Sets {
             }
         }
     }
-    
     init() {
         deck = []
         selectedCards = []
@@ -113,7 +111,6 @@ func createDeck() -> [Card] {
     }
     return deck
 }
-
 extension Int {
     var arc4random: Int {
         if self > 0 {
@@ -125,7 +122,6 @@ extension Int {
         }
     }
 }
-
 extension Array {
     var shuffle: Array {
         var shuffled = Array<Element>()

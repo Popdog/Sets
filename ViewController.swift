@@ -17,8 +17,6 @@ class ViewController: UIViewController {
                     color: [#colorLiteral(red: 1, green: 0.1491314173, blue: 0, alpha: 1), #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1), #colorLiteral(red: 0.01680417731, green: 0.1983509958, blue: 1, alpha: 1)],
                     shape: ["▲","●","■"])
     
-    // This is the rework
-    
     @IBOutlet var cardButtons: [UIButton]!
     
     @IBOutlet weak var scoreLabel: UILabel!
@@ -32,7 +30,6 @@ class ViewController: UIViewController {
         }
         updateViewFromModel()
     }
-    
     @IBAction func dealCards(_ sender: UIButton) {
         var occupiedButtons = 0
         let cardsToDeal = 3
@@ -53,52 +50,44 @@ class ViewController: UIViewController {
         }
         updateViewFromModel()
     }
-    
     @IBAction func touchCard(_ sender: UIButton) {
         let index = getIndex(of: nil, of: sender, in: cardButtonArray)
-        if index != nil, cardButtonArray[index!].card != nil {
-            game.choose(card: cardButtonArray[index!].card!)
+        if index != nil, let cardToTouch = cardButtonArray[index!].getCard() {
+            game.choose(card: cardToTouch)
         }
         updateViewFromModel()
     }
-    
     func updateViewFromModel() {
         for index in cardButtonArray.indices { // Check for changes in state of displayed cards
-            if cardButtonArray[index].card != nil { // If card should not be displayed
-                if !game.displayedCards.contains(cardButtonArray[index].card!) {
-                    cardButtonArray[index].removeCard() // Remove the card and set the button to hidden
+            if let card = cardButtonArray[index].getCard() { // If card should not be displayed
+                if !game.displayedCards.contains(card) { cardButtonArray[index].displayState = .hidden
                 } else {
-                    cardButtonArray[index].displayState = .showCard(card: cardButtonArray[index].card!)
+                    cardButtonArray[index].displayState = .showCard(card: cardButtonArray[index].getCard()!)
                 }
             }
         }
         for index in game.displayedCards.indices { //Check model to see if any new cards need to be displayed
             if getIndex(of: game.displayedCards[index], of: nil, in: cardButtonArray) == nil { // If a card is not currently assigned to a button
-                let randomIndex = getIndexOfAvailableButton(from: cardButtonArray) // Randomly select an available CardButton
-                if randomIndex != nil {
-                    cardButtonArray[randomIndex!].addCard(card: game.displayedCards[index]) // Store the card in the CardButton
+                if let randomIndex = getIndexOfAvailableButton(from: cardButtonArray) { //Randomly select an available button
+                    cardButtonArray[randomIndex].displayState = .showCard(card: game.displayedCards[index]) // Store the card in the CardButton
                 }
             }
         }
         for index in game.selectedCards.indices {
-            let selectedIndex = getIndex(of: game.selectedCards[index], of: nil, in: cardButtonArray)
-            if selectedIndex != nil {
-                 cardButtonArray[selectedIndex!].displayState = .showSelectedCard(card: cardButtonArray[selectedIndex!].card!)
+            if let selectedIndex = getIndex(of: game.selectedCards[index], of: nil, in: cardButtonArray) {
+                 cardButtonArray[selectedIndex].displayState = .showSelectedCard(card: cardButtonArray[selectedIndex].getCard()!)
             }
         }
         for index in game.matchedCards.indices {
-            let matchedIndex = getIndex(of: game.matchedCards[index], of: nil, in: cardButtonArray)
-            if matchedIndex != nil {
-                cardButtonArray[matchedIndex!].displayState = .showMatch(card: cardButtonArray[matchedIndex!].card!)
+            if let matchedIndex = getIndex(of: game.matchedCards[index], of: nil, in: cardButtonArray) {
+                cardButtonArray[matchedIndex].displayState = .showMatch(card: cardButtonArray[matchedIndex].getCard()!)
             }
         }
         for index in game.mismatchedCards.indices {
-            let mismatchedIndex = getIndex(of: game.mismatchedCards[index], of: nil, in: cardButtonArray)
-            if mismatchedIndex != nil {
-                cardButtonArray[mismatchedIndex!].displayState = .showMismatch(card: cardButtonArray[mismatchedIndex!].card!)
+            if let mismatchedIndex = getIndex(of: game.mismatchedCards[index], of: nil, in: cardButtonArray) {
+                cardButtonArray[mismatchedIndex].displayState = .showMismatch(card: cardButtonArray[mismatchedIndex].getCard()!)
             }
         }
-        
         for index in cardButtonArray.indices {
             setBorder(width: 0.0, color: #colorLiteral(red: 0.9999960065, green: 1, blue: 1, alpha: 0), for: index)
             cardButtonArray[index].button.backgroundColor = #colorLiteral(red: 0.8039215803, green: 0.8039215803, blue: 0.8039215803, alpha: 1)
@@ -121,16 +110,14 @@ class ViewController: UIViewController {
         }
         scoreLabel.text = "Score: \(game.score)"
     }
-    
     func setBorder(width borderWidth: CGFloat, color borderColor: CGColor, for index: Int) {
         cardButtonArray[index].button.layer.borderWidth = borderWidth
         cardButtonArray[index].button.layer.borderColor = borderColor
         cardButtonArray[index].button.layer.cornerRadius = 8.0
     }
-    
     private func getCardButton(of card: Card?, of button: UIButton?, in buttonArray: [CardButton]) -> CardButton? {
         for index in buttonArray.indices {
-            if card != nil, buttonArray[index].card != nil, card! == buttonArray[index].card! {
+            if card != nil, let cardToCompare = buttonArray[index].getCard(), card! == cardToCompare {
                 return buttonArray[index]
             } else if button != nil, button! == buttonArray[index].button {
                 return buttonArray[index]
@@ -139,11 +126,9 @@ class ViewController: UIViewController {
         return nil
     }
     private func getAttributedString(for index: Int) -> NSAttributedString? {
-        if(cardButtonArray[index].card != nil) {
-            let numberIndex = cardButtonArray[index].card!.number
-            let colorIndex = cardButtonArray[index].card!.color
-            let shadingIndex = cardButtonArray[index].card!.shading
-            let shapeIndex = cardButtonArray[index].card!.shape
+        if let card = cardButtonArray[index].getCard() {
+            let numberIndex = card.number; let colorIndex = card.color
+            let shadingIndex = card.shading; let shapeIndex = card.shape
             let attributes: [NSAttributedStringKey:Any]
             switch shadingIndex {
             case 0:
@@ -172,55 +157,45 @@ class ViewController: UIViewController {
         }
         return nil
     }
-}
-
-private func getIndexOfAvailableButton(from cardButtonArray: [CardButton]) -> Int? {
-    var availableCardButtons: [CardButton] = []
-    for cardButton in cardButtonArray {
-        if cardButton.card == nil {
-            availableCardButtons.append(cardButton)
+    private func getIndexOfAvailableButton(from cardButtonArray: [CardButton]) -> Int? {
+        var availableCardButtons: [CardButton] = []
+        for cardButton in cardButtonArray {
+            if cardButton.getCard() == nil {
+                availableCardButtons.append(cardButton)
+            }
         }
+        return cardButtonArray.index(of: availableCardButtons[availableCardButtons.count.arc4random])
     }
-    return cardButtonArray.index(of: availableCardButtons[availableCardButtons.count.arc4random])
-}
-
-private func getIndex(of card: Card?, of button: UIButton?, in cardButtonArray: [CardButton]) -> Int? {
-    for index in cardButtonArray.indices {
-        if card != nil, cardButtonArray[index].card != nil, cardButtonArray[index].card! == card! {
-            return index
-        } else if button != nil, cardButtonArray[index].button == button! {
-            return index
+    private func getIndex(of card: Card?, of button: UIButton?, in cardButtonArray: [CardButton]) -> Int? {
+        for index in cardButtonArray.indices {
+            if card != nil, cardButtonArray[index].getCard() != nil, cardButtonArray[index].getCard()! == card! {
+                return index
+            } else if button != nil, cardButtonArray[index].button == button! {
+                return index
+            }
         }
+        return nil
     }
-    return nil
 }
-
-private struct CardButton: Equatable {
+private struct CardButton: Equatable{
     let button: UIButton
-    var card: Card?
     var displayState: DisplayState
-    
-    mutating func removeCard() {
-        self.card = nil
-        self.displayState = .hidden
+    func getCard() -> Card? {
+        switch displayState {
+        case .showCard(let card): return card
+        case .showMatch(let card): return card
+        case .showSelectedCard(let card): return card
+        case .showMismatch(let card): return card
+        default: return nil
+        }
     }
-    
-    mutating func addCard(card: Card) {
-        self.card = card
-        self.displayState = .showCard(card: self.card!)
-    }
-    
+    static func ==(lhs: CardButton, rhs: CardButton) -> Bool
+    { return lhs.button == rhs.button }
     init(button: UIButton) {
         self.button = button
-        card = nil
         displayState = .hidden
     }
-    
-    static func ==(lhs: CardButton, rhs: CardButton) -> Bool {
-        return lhs.button == rhs.button
-    }
 }
-
 private enum DisplayState {
     case showCard(card: Card)
     case showSelectedCard(card: Card)
