@@ -12,73 +12,76 @@ let INITIAL_CARDS_DEALT = 12
 
 class Sets {
     private(set) var deck: [Card]
-    private(set) var selectedCards: [Card]
-    private(set) var matchedCards: [Card]
-    private(set) var displayedCards: [Card]
-    private(set) var mismatchedCards: [Card]
     private(set) var score: Int
+    private(set) var cards = [Card: CardStatus]()
     private lazy var pointsForAMatch = {
-        Int((30 - self.displayedCards.count) / 3)
+        3
     }
     private let penaltyForAMismatch = 5
     
     func choose(card: Card) {
-        removeMatchedCards()
-        mismatchedCards = []
-        if selectedCards.contains(card) {
-            selectedCards.remove(at: selectedCards.index(of: card)!)
-        } else {
-            selectedCards.append(card)
+        switch cards[card]! {
+        case .isSelected:
+            cards[card] = .onTable
+        case .onTable:
+            cards[card] = .isSelected
+        default:
+            break
         }
-        if selectedCards.count == 3 {
-            if formASet(firstCard: selectedCards[0], secondCard: selectedCards[1], thirdCard: selectedCards[2]) {
-                matchedCards += selectedCards
+        var selected: [Card] = []
+        for (cardKey, cardStatus) in cards {
+            switch cardStatus {
+            case .isSelected:
+                selected.append(cardKey)
+            case .isMismatched:
+                cards[cardKey] = .onTable
+            default:
+                break
+            }
+        }
+        if selected.count == 3 {
+            if formASet(firstCard: selected[0], secondCard: selected[1], thirdCard: selected[2]) {
+                cards[selected[0]] = .isMatched; cards[selected[1]] = .isMatched; cards[selected[2]] = .isMatched
                 score += pointsForAMatch()
+                deal(cards: 3)
             } else {
-                mismatchedCards += selectedCards
                 score -= penaltyForAMismatch
+                cards[selected[0]] = .isMismatched; cards[selected[1]] = .isMismatched; cards[selected[2]] = .isMismatched
             }
-            selectedCards = []
         }
     }
-    
     func deal(cards numberOfCards: Int) {
-        removeMatchedCards()
-        mismatchedCards = []
-        var cardsDealt = 0
-        for index in deck.indices {
-            if cardsDealt >= numberOfCards {
-                return
-            }
-            if !matchedCards.contains(deck[index]), !displayedCards.contains(deck[index]) {
-                displayedCards.append(deck[index])
-                cardsDealt = cardsDealt + 1
+        var availableCards: [Card] = []
+        for (cardKey, cardStatus) in cards {
+            switch cardStatus {
+            case .inDeck:
+                availableCards.append(cardKey)
+            case .isMismatched:
+                cards[cardKey] = .onTable
+            default:
+                break
             }
         }
-    }
-    private func removeMatchedCards() {
-        for index in matchedCards.indices {
-            if displayedCards.contains(matchedCards[index]) {
-                displayedCards.remove(at: displayedCards.index(of: matchedCards[index])!)
+        if availableCards.count >= numberOfCards {
+            for _ in 0..<numberOfCards {
+                let randomIndex = availableCards.count.arc4random
+                cards[availableCards[randomIndex]] = .onTable
+                availableCards.remove(at: randomIndex)
             }
         }
     }
     init() {
         deck = []
-        selectedCards = []
-        matchedCards = []
-        displayedCards = []
-        mismatchedCards = []
         score = 0
     }
-    
     func newGame() {
         deck = createDeck()
         deck = deck.shuffle
-        displayedCards = []
+        cards = [:]
+        for card in deck {
+            cards[card] = CardStatus.inDeck
+        }
         deal(cards: INITIAL_CARDS_DEALT)
-        matchedCards = []
-        selectedCards = []
         score = 0
     }
 }
@@ -96,7 +99,6 @@ func formASet(firstCard: Card, secondCard: Card, thirdCard: Card) -> Bool {
     
     return (setIndexOne && setIndexTwo && setIndexThree && setIndexFour)
 }
-
 func createDeck() -> [Card] {
     var deck = [Card]()
     for number in 0..<3 {
@@ -132,4 +134,7 @@ extension Array {
         }
         return shuffled
     }
+}
+enum CardStatus {
+    case inDeck, onTable, isSelected, isMatched, isMismatched
 }

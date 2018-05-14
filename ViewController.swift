@@ -58,34 +58,36 @@ class ViewController: UIViewController {
         updateViewFromModel()
     }
     func updateViewFromModel() {
-        for index in cardButtonArray.indices { // Check for changes in state of displayed cards
-            if let card = cardButtonArray[index].getCard() { // If card should not be displayed
-                if !game.displayedCards.contains(card) { cardButtonArray[index].displayState = .hidden
-                } else {
-                    cardButtonArray[index].displayState = .showCard(card: cardButtonArray[index].getCard()!)
+        for (cardKey, cardStatus) in game.cards {
+            if let index = getIndex(of: cardKey, of: nil, in: cardButtonArray) {
+                switch cardStatus {
+                case .inDeck:
+                    cardButtonArray[index].displayState = .hidden
+                case .isSelected:
+                    cardButtonArray[index].displayState = .showSelectedCard(card: cardKey)
+                case .isMismatched:
+                    cardButtonArray[index].displayState = .showMismatch(card: cardKey)
+                case .isMatched:
+                    switch cardButtonArray[index].displayState {
+                    case .showCard:
+                        cardButtonArray[index].displayState = .showMatch(card: cardKey)
+                    case .showSelectedCard:
+                        cardButtonArray[index].displayState = .showMatch(card: cardKey)
+                    default:
+                        cardButtonArray[index].displayState = .hidden
+                    }
+                case .onTable:
+                    cardButtonArray[index].displayState = .showCard(card: cardKey)
                 }
-            }
-        }
-        for index in game.displayedCards.indices { //Check model to see if any new cards need to be displayed
-            if getIndex(of: game.displayedCards[index], of: nil, in: cardButtonArray) == nil { // If a card is not currently assigned to a button
-                if let randomIndex = getIndexOfAvailableButton(from: cardButtonArray) { //Randomly select an available button
-                    cardButtonArray[randomIndex].displayState = .showCard(card: game.displayedCards[index]) // Store the card in the CardButton
+            } else {
+                switch cardStatus {
+                case .onTable:
+                    if let randomIndex = getIndexOfAvailableButton(from: cardButtonArray) { //Randomly select an available button
+                        cardButtonArray[randomIndex].displayState = .showCard(card: cardKey) // Store the card in the CardButton
+                    }
+                default:
+                    break
                 }
-            }
-        }
-        for index in game.selectedCards.indices {
-            if let selectedIndex = getIndex(of: game.selectedCards[index], of: nil, in: cardButtonArray) {
-                 cardButtonArray[selectedIndex].displayState = .showSelectedCard(card: cardButtonArray[selectedIndex].getCard()!)
-            }
-        }
-        for index in game.matchedCards.indices {
-            if let matchedIndex = getIndex(of: game.matchedCards[index], of: nil, in: cardButtonArray) {
-                cardButtonArray[matchedIndex].displayState = .showMatch(card: cardButtonArray[matchedIndex].getCard()!)
-            }
-        }
-        for index in game.mismatchedCards.indices {
-            if let mismatchedIndex = getIndex(of: game.mismatchedCards[index], of: nil, in: cardButtonArray) {
-                cardButtonArray[mismatchedIndex].displayState = .showMismatch(card: cardButtonArray[mismatchedIndex].getCard()!)
             }
         }
         for index in cardButtonArray.indices {
