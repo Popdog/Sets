@@ -9,10 +9,10 @@
 import Foundation
 
 struct Card: Hashable {
-    let number: Int
-    let color: Int
-    let shape: Int
-    let shading: Int
+    let number: Number
+    let color: Color
+    let shape: Shape
+    let fill: Fill
     let identifier: Int
     
     private static var identifierFactory = 0
@@ -28,15 +28,47 @@ struct Card: Hashable {
         return lhs.identifier == rhs.identifier
     }
     
-    init(with number: Int, with color: Int, with shape: Int, with shading: Int) {
+    init(withNumber number: Number, withColor color: Color, withShape shape: Shape, withFill fill: Fill) {
         self.number = number
         self.color = color
         self.shape = shape
-        self.shading = shading
+        self.fill = fill
         identifier = Card.getUniqueIdentifier()
     }
 }
 
 enum CardLocation {
     case inDeck, onTable, inDiscard
+}
+
+enum Number: Int, Equatable {
+    case one = 1
+    case two = 2
+    case three = 3
+    
+    static var all = [Number.one, Number.two, Number.three]
+}
+
+enum Shape: String {
+    case squiggle
+    case oval
+    case diamond
+    
+    static var all = [Shape.squiggle, Shape.oval, Shape.diamond]
+}
+
+enum Fill: String {
+    case solid
+    case striped
+    case empty
+    
+    static var all = [Fill.solid, Fill.striped, Fill.empty]
+}
+
+enum Color: String {
+    case red
+    case green
+    case purple
+    
+    static var all = [Color.red, Color.green, Color.purple]
 }

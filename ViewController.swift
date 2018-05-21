@@ -10,198 +10,186 @@ import UIKit
 
 class ViewController: UIViewController {
     lazy var game = Sets()
-    private var cardButtonArray: [CardButton] = []
     var cardsToDisplay: [Card] = []
+    static let cardsToDeal = 3
+    private var cardDisplays: [CardDisplay] = []
     
-    let cardText = (number: [1, 2, 3],
-                    color: [#colorLiteral(red: 1, green: 0.1491314173, blue: 0, alpha: 1), #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1), #colorLiteral(red: 0.01680417731, green: 0.1983509958, blue: 1, alpha: 1)],
-                    shape: ["▲","●","■"])
+    @IBOutlet weak var playArea: tableView!
     
-    @IBOutlet var cardButtons: [UIButton]!
+    override func viewDidLoad() {
+        super.viewDidLoad()
+        if let table = self.playArea {
+            table.grid = Grid(layout: .aspectRatio(0.75), frame: table.bounds)
+        }
+    }
+    
+    @IBOutlet weak var newGameButton: UIButton! {
+        didSet{
+            newGameButton.addShadow(withColor: UIButton.shadowColor, withRadius: UIButton.shadowRadius, withOffset: UIButton.shadowOffset, withOpacity: UIButton.shadowOpacity)
+            newGameButton.addBorder(withColor: #colorLiteral(red: 0.2549019754, green: 0.2745098174, blue: 0.3019607961, alpha: 1), withWidth: 2.0)
+            newGameButton.layer.cornerRadius = 8.0
+        }
+    }
+    @IBOutlet weak var dealButton: UIButton! {
+        didSet{
+            dealButton.addShadow(withColor: UIButton.shadowColor, withRadius: UIButton.shadowRadius, withOffset: UIButton.shadowOffset, withOpacity: UIButton.shadowOpacity)
+            dealButton.addBorder(withColor: #colorLiteral(red: 0.2549019754, green: 0.2745098174, blue: 0.3019607961, alpha: 1), withWidth: 2.0)
+            dealButton.layer.cornerRadius = 8.0
+        }
+    }
     
     @IBOutlet weak var scoreLabel: UILabel!
     
     @IBAction func newGame(_ sender: UIButton) {
+        cardDisplays = []
+        playArea.removeAll()
         game.newGame()
-        cardButtonArray = []
-        for cardButton in cardButtons {
-            let newCardButton = CardButton(button: cardButton)
-            cardButtonArray.append(newCardButton)
-        }
         updateViewFromModel()
     }
     @IBAction func dealCards(_ sender: UIButton) {
-        var occupiedButtons = 0
-        let cardsToDeal = 3
-        for cardButton in cardButtonArray {
-            switch cardButton.displayState {
-            case .showCard:
-                occupiedButtons += 1
-            case .showMismatch:
-                occupiedButtons += 1
-            case .showSelectedCard:
-                occupiedButtons += 1
-            default:
-                break
-            }
-        }
-        if cardsToDeal <= (cardButtons.count - occupiedButtons) {
-            game.deal(cards: cardsToDeal)
-        }
+        game.deal(cards: ViewController.cardsToDeal)
         updateViewFromModel()
-    }
-    @IBAction func touchCard(_ sender: UIButton) {
-        let index = getIndex(of: nil, of: sender, in: cardButtonArray)
-        if index != nil, let cardToTouch = cardButtonArray[index!].getCard() {
-            game.choose(card: cardToTouch)
-        }
-        updateViewFromModel()
+        playArea.setNeedsDisplay()
     }
     func updateViewFromModel() {
+        var matchedCardIndices: [Int] = []
         for (cardKey, cardStatus) in game.cards {
-            if let index = getIndex(of: cardKey, of: nil, in: cardButtonArray) {
+            if let cardViewIndex = getIndexOfCardDisplay(displaying: cardKey, in: cardDisplays) {
                 switch cardStatus {
-                case .inDeck:
-                    cardButtonArray[index].displayState = .hidden
                 case .isSelected:
-                    cardButtonArray[index].displayState = .showSelectedCard(card: cardKey)
+                    cardDisplays[cardViewIndex].displayState = .showSelectedCard(card: cardKey)
                 case .isMismatched:
-                    cardButtonArray[index].displayState = .showMismatch(card: cardKey)
+                    cardDisplays[cardViewIndex].displayState = .showMismatch(card: cardKey)
                 case .isMatched:
-                    switch cardButtonArray[index].displayState {
-                    case .showCard:
-                        cardButtonArray[index].displayState = .showMatch(card: cardKey)
-                    case .showSelectedCard:
-                        cardButtonArray[index].displayState = .showMatch(card: cardKey)
-                    default:
-                        cardButtonArray[index].displayState = .hidden
-                    }
+                    let cardState = cardDisplays[cardViewIndex].displayState
+                        switch cardState {
+                        case .showCard:
+                            cardDisplays[cardViewIndex].displayState = .showMatch(card: cardKey)
+                        case .showSelectedCard:
+                            cardDisplays[cardViewIndex].displayState = .showMatch(card: cardKey)
+                        case .showMatch:
+                            if let removedIndex = playArea.cardViews.index(of: cardDisplays[cardViewIndex].view) {
+                                matchedCardIndices.append(removedIndex)
+                            }
+                            cardDisplays.remove(at: getIndexOfCardDisplay(displaying: cardKey, in: cardDisplays)!)
+                            playArea.remove(view: cardDisplays[cardViewIndex].view)
+                        default:
+                            break
+                        }
                 case .onTable:
-                    cardButtonArray[index].displayState = .showCard(card: cardKey)
+                    cardDisplays[cardViewIndex].displayState = .showCard(card: cardKey)
                 }
             } else {
                 switch cardStatus {
                 case .onTable:
-                    if let randomIndex = getIndexOfAvailableButton(from: cardButtonArray) { //Randomly select an available button
-                        cardButtonArray[randomIndex].displayState = .showCard(card: cardKey) // Store the card in the CardButton
+                    let newCardView: CardView
+                    if matchedCardIndices.count > 0 {
+                        newCardView = playArea.addCard(card: cardKey, at: matchedCardIndices.removeFirst())
+                    } else {
+                        newCardView = playArea.addCard(card: cardKey, at: playArea.cardViews.count)
                     }
+                    let newCardDisplay = CardDisplay(view: newCardView, displayState: .showCard(card: cardKey))
+                    cardDisplays.append(newCardDisplay)
+                    let tap = cardTapGesture(target: self, action: #selector(selectCard))
+                    tap.card = cardKey
+                    newCardView.addGestureRecognizer(tap)
                 default:
                     break
                 }
             }
-        }
-        for index in cardButtonArray.indices {
-            setBorder(width: 0.0, color: #colorLiteral(red: 0.9999960065, green: 1, blue: 1, alpha: 0), for: index)
-            cardButtonArray[index].button.backgroundColor = #colorLiteral(red: 0.8039215803, green: 0.8039215803, blue: 0.8039215803, alpha: 1)
-            switch cardButtonArray[index].displayState {
-            case .hidden:
-                cardButtonArray[index].button.backgroundColor = #colorLiteral(red: 1.0, green: 1.0, blue: 1.0, alpha: 1.0)
-                cardButtonArray[index].button.setAttributedTitle(NSAttributedString(string: "", attributes: nil), for: UIControlState.normal)
-            case .showCard:
-                cardButtonArray[index].button.setAttributedTitle(getAttributedString(for: index), for: UIControlState.normal)
-            case .showSelectedCard:
-                setBorder(width: 5.0, color: #colorLiteral(red: 0.9686274529, green: 0.78039217, blue: 0.3450980484, alpha: 1), for: index)
-                cardButtonArray[index].button.setAttributedTitle(getAttributedString(for: index), for: UIControlState.normal)
-            case .showMatch:
-                setBorder(width: 5.0, color: #colorLiteral(red: 0.5568627715, green: 0.3529411852, blue: 0.9686274529, alpha: 1), for: index)
-                cardButtonArray[index].button.setAttributedTitle(getAttributedString(for: index), for: UIControlState.normal)
-            case .showMismatch:
-                setBorder(width: 5.0, color: #colorLiteral(red: 0.7450980544, green: 0.1568627506, blue: 0.07450980693, alpha: 1), for: index)
-                cardButtonArray[index].button.setAttributedTitle(getAttributedString(for: index), for: UIControlState.normal)
+            for cardDisplay in cardDisplays {
+                let outlineColor: UIColor
+                switch cardDisplay.displayState {
+                case .showSelectedCard:
+                    outlineColor = #colorLiteral(red: 0.9607843161, green: 0.7058823705, blue: 0.200000003, alpha: 1)
+                case .showMatch:
+                    outlineColor = #colorLiteral(red: 0.2588235438, green: 0.7568627596, blue: 0.9686274529, alpha: 1)
+                case .showMismatch:
+                    outlineColor = #colorLiteral(red: 0.9254902005, green: 0.2352941185, blue: 0.1019607857, alpha: 1)
+                default:
+                    outlineColor = #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1)
+                }
+                playArea.updateCard(in: cardDisplay.view, number: nil, color: nil, fill: nil, shape: nil, outline: outlineColor)
             }
         }
+        playArea.setNeedsDisplay()
+        playArea.setNeedsLayout()
         scoreLabel.text = "Score: \(game.score)"
-    }
-    func setBorder(width borderWidth: CGFloat, color borderColor: CGColor, for index: Int) {
-        cardButtonArray[index].button.layer.borderWidth = borderWidth
-        cardButtonArray[index].button.layer.borderColor = borderColor
-        cardButtonArray[index].button.layer.cornerRadius = 8.0
-    }
-    private func getCardButton(of card: Card?, of button: UIButton?, in buttonArray: [CardButton]) -> CardButton? {
-        for index in buttonArray.indices {
-            if card != nil, let cardToCompare = buttonArray[index].getCard(), card! == cardToCompare {
-                return buttonArray[index]
-            } else if button != nil, button! == buttonArray[index].button {
-                return buttonArray[index]
-            }
+        print("CardDisplay Cards:")
+        for cardDisplay in cardDisplays {
+            print(cardDisplay.displayState.getCard!.identifier)
         }
-        return nil
+        print("********")
     }
-    private func getAttributedString(for index: Int) -> NSAttributedString? {
-        if let card = cardButtonArray[index].getCard() {
-            let numberIndex = card.number; let colorIndex = card.color
-            let shadingIndex = card.shading; let shapeIndex = card.shape
-            let attributes: [NSAttributedStringKey:Any]
-            switch shadingIndex {
-            case 0:
-                attributes = [
-                    .strokeWidth : -2.0,
-                    .strokeColor : cardText.color[colorIndex],
-                    .foregroundColor : cardText.color[colorIndex].withAlphaComponent(0.15)
-                ]
-            case 1:
-                attributes = [
-                    .strokeWidth : -2.0,
-                    .strokeColor : cardText.color[colorIndex],
-                    .foregroundColor : cardText.color[colorIndex].withAlphaComponent(1.0)
-                ]
-            default:
-                attributes = [
-                    .strokeWidth : 3.0,
-                    .strokeColor : cardText.color[colorIndex],
-                ]
-            }
-            var cardString = ""
-            for _ in 0..<cardText.number[numberIndex] {
-                cardString += cardText.shape[shapeIndex]
-            }
-            return NSAttributedString(string: cardString, attributes: attributes)
-        }
-        return nil
+    
+    @objc private func selectCard(sender: cardTapGesture) {
+        game.choose(card: sender.card)
+        updateViewFromModel()
     }
-    private func getIndexOfAvailableButton(from cardButtonArray: [CardButton]) -> Int? {
-        var availableCardButtons: [CardButton] = []
-        for cardButton in cardButtonArray {
-            if cardButton.getCard() == nil {
-                availableCardButtons.append(cardButton)
-            }
-        }
-        return cardButtonArray.index(of: availableCardButtons[availableCardButtons.count.arc4random])
-    }
-    private func getIndex(of card: Card?, of button: UIButton?, in cardButtonArray: [CardButton]) -> Int? {
-        for index in cardButtonArray.indices {
-            if card != nil, cardButtonArray[index].getCard() != nil, cardButtonArray[index].getCard()! == card! {
-                return index
-            } else if button != nil, cardButtonArray[index].button == button! {
-                return index
+    
+    private func getIndexOfCardDisplay(displaying card: Card, in cardDisplays: [CardDisplay]) -> Int? {
+        for index in cardDisplays.indices {
+            if let displayedCard = cardDisplays[index].displayState.getCard {
+                if displayedCard == card {
+                    return index
+                }
             }
         }
         return nil
     }
 }
-private struct CardButton: Equatable{
-    let button: UIButton
+
+struct CardDisplay {
+    let view: CardView
     var displayState: DisplayState
-    func getCard() -> Card? {
-        switch displayState {
-        case .showCard(let card): return card
-        case .showMatch(let card): return card
-        case .showSelectedCard(let card): return card
-        case .showMismatch(let card): return card
-        default: return nil
-        }
-    }
-    static func ==(lhs: CardButton, rhs: CardButton) -> Bool
-    { return lhs.button == rhs.button }
-    init(button: UIButton) {
-        self.button = button
-        displayState = .hidden
+    init(view: CardView, displayState: DisplayState) {
+        self.view = view
+        self.displayState = displayState
     }
 }
-private enum DisplayState {
+
+enum DisplayState {
     case showCard(card: Card)
     case showSelectedCard(card: Card)
     case showMatch(card: Card)
     case showMismatch(card: Card)
     case hidden
+}
+
+extension DisplayState {
+    var getCard: Card? {
+        switch self {
+        case .showCard(let card):
+            return card
+        case .showMatch(let card):
+            return card
+        case .showMismatch(let card):
+            return card
+        case .showSelectedCard(let card):
+            return card
+        case .hidden:
+            return nil
+        }
+    }
+}
+
+extension UIButton {
+    static let shadowRadius: CGFloat = 2.0
+    static let shadowOffset: CGSize = CGSize(width: 1.0, height: 1.0)
+    static let shadowColor: CGColor = #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1)
+    static let shadowOpacity: Float = 0.8
+    func addShadow(withColor color: CGColor, withRadius radius: CGFloat, withOffset offset: CGSize, withOpacity opacity: Float) {
+        self.layer.shadowColor = color
+        self.layer.shadowRadius = radius
+        self.layer.shadowOffset = offset
+        self.layer.shadowOpacity = opacity
+    }
+    func addBorder(withColor color: CGColor, withWidth width: CGFloat) {
+        self.layer.borderColor = color
+        self.layer.borderWidth = width
+    }
+}
+
+class cardTapGesture: UITapGestureRecognizer {
+    var card = Card(withNumber: .one, withColor: .purple, withShape: .squiggle, withFill: .empty)
 }

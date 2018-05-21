@@ -11,15 +11,20 @@ import Foundation
 let INITIAL_CARDS_DEALT = 12
 
 class Sets {
-    private(set) var deck: [Card]
+    private(set) var deck = SetsDeck()
     private(set) var score: Int
     private(set) var cards = [Card: CardStatus]()
     private lazy var pointsForAMatch = {
         3
     }
+    private var matchInPreviousTouch = false
     private let penaltyForAMismatch = 5
     
     func choose(card: Card) {
+        if matchInPreviousTouch == true {
+            deal(cards: 3)
+            matchInPreviousTouch = false
+        }
         switch cards[card]! {
         case .isSelected:
             cards[card] = .onTable
@@ -39,11 +44,16 @@ class Sets {
                 break
             }
         }
+        print("Selected:")
+        for selectedCard in selected {
+            print(selectedCard.identifier)
+        }
+        print("*****")
         if selected.count == 3 {
             if formASet(firstCard: selected[0], secondCard: selected[1], thirdCard: selected[2]) {
                 cards[selected[0]] = .isMatched; cards[selected[1]] = .isMatched; cards[selected[2]] = .isMatched
                 score += pointsForAMatch()
-                deal(cards: 3)
+                matchInPreviousTouch = true
             } else {
                 score -= penaltyForAMismatch
                 cards[selected[0]] = .isMismatched; cards[selected[1]] = .isMismatched; cards[selected[2]] = .isMismatched
@@ -51,68 +61,43 @@ class Sets {
         }
     }
     func deal(cards numberOfCards: Int) {
-        var availableCards: [Card] = []
+        matchInPreviousTouch = false
         for (cardKey, cardStatus) in cards {
             switch cardStatus {
-            case .inDeck:
-                availableCards.append(cardKey)
             case .isMismatched:
                 cards[cardKey] = .onTable
             default:
                 break
             }
         }
-        if availableCards.count >= numberOfCards {
+        if deck.cards.count >= numberOfCards {
             for _ in 0..<numberOfCards {
-                let randomIndex = availableCards.count.arc4random
-                cards[availableCards[randomIndex]] = .onTable
-                availableCards.remove(at: randomIndex)
+                cards[deck.draw()!] = .onTable
             }
         }
     }
     init() {
-        deck = []
         score = 0
     }
     func newGame() {
-        deck = createDeck()
-        deck = deck.shuffle
+        deck = SetsDeck()
         cards = [:]
-        for card in deck {
-            cards[card] = CardStatus.inDeck
-        }
         deal(cards: INITIAL_CARDS_DEALT)
         score = 0
+        matchInPreviousTouch = false
     }
 }
 
 func formASet(firstCard: Card, secondCard: Card, thirdCard: Card) -> Bool {
-    var areSame: (Int, Int, Int) -> Bool
-    var areDistinct: (Int, Int, Int) -> Bool
-    areSame = {$0 == $1 && $1 == $2}
-    areDistinct = {$0 != $1 && $0 != $2 && $1 != $2}
-    
-    let setIndexOne = areSame(firstCard.color, secondCard.color, thirdCard.color) || areDistinct(firstCard.color, secondCard.color, thirdCard.color)
-    let setIndexTwo = areSame(firstCard.number, secondCard.number, thirdCard.number) || areDistinct(firstCard.number, secondCard.number, thirdCard.number)
-    let setIndexThree = areSame(firstCard.shading, secondCard.shading, thirdCard.shading) || areDistinct(firstCard.shading, secondCard.shading, thirdCard.shading)
-    let setIndexFour = areSame(firstCard.shape, secondCard.shape, thirdCard.shape) || areDistinct(firstCard.shape, secondCard.shape, thirdCard.shape)
-    
-    return (setIndexOne && setIndexTwo && setIndexThree && setIndexFour)
+    return true
+    let colorIndex = (firstCard.color == secondCard.color && secondCard.color == thirdCard.color) || (firstCard.color != secondCard.color && firstCard.color != thirdCard.color && secondCard.color != thirdCard.color)
+    let shapeIndex = (firstCard.shape == secondCard.shape && secondCard.shape == thirdCard.shape) || (firstCard.shape != secondCard.shape && firstCard.shape != thirdCard.shape && secondCard.shape != thirdCard.shape)
+    let numberIndex = (firstCard.number == secondCard.number && secondCard.number == thirdCard.number) || (firstCard.number != secondCard.number && firstCard.number != thirdCard.number && secondCard.number != thirdCard.number)
+    let fillIndex = (firstCard.fill == secondCard.fill && secondCard.fill == thirdCard.fill) || (firstCard.fill != secondCard.fill && firstCard.fill != thirdCard.fill && secondCard.fill != thirdCard.fill)
+
+    return (colorIndex && shapeIndex && numberIndex && fillIndex)
 }
-func createDeck() -> [Card] {
-    var deck = [Card]()
-    for number in 0..<3 {
-        for color in 0..<3 {
-            for shape in 0..<3 {
-                for shading in 0..<3 {
-                    let card = Card(with: number, with: color, with: shape, with: shading)
-                    deck += [card]
-                }
-            }
-        }
-    }
-    return deck
-}
+
 extension Int {
     var arc4random: Int {
         if self > 0 {
@@ -136,5 +121,5 @@ extension Array {
     }
 }
 enum CardStatus {
-    case inDeck, onTable, isSelected, isMatched, isMismatched
+    case onTable, isSelected, isMatched, isMismatched
 }
