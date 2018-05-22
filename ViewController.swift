@@ -12,7 +12,7 @@ class ViewController: UIViewController {
     lazy var game = Sets()
     var cardsToDisplay: [Card] = []
     static let cardsToDeal = 3
-    private var cardDisplays: [CardDisplay] = []
+    private var cardViewLookup: [(CardView, DisplayState)] = []
     
     @IBOutlet weak var playArea: tableView!
     
@@ -41,7 +41,7 @@ class ViewController: UIViewController {
     @IBOutlet weak var scoreLabel: UILabel!
     
     @IBAction func newGame(_ sender: UIButton) {
-        cardDisplays = []
+        cardViewLookup = []
         playArea.removeAll()
         game.newGame()
         updateViewFromModel()
@@ -54,42 +54,36 @@ class ViewController: UIViewController {
     func updateViewFromModel() {
         var matchedCardIndices: [Int] = []
         for (cardKey, cardStatus) in game.cards {
-            if let cardViewIndex = getIndexOfCardDisplay(displaying: cardKey, in: cardDisplays) {
+            if let indexOfCard = getIndex(ofCard: cardKey, ofCardView: nil, in: cardViewLookup) {
                 switch cardStatus {
                 case .isSelected:
-                    cardDisplays[cardViewIndex].displayState = .showSelectedCard(card: cardKey)
+                    cardViewLookup[indexOfCard].1 = .showSelectedCard(card: cardKey)
                 case .isMismatched:
-                    cardDisplays[cardViewIndex].displayState = .showMismatch(card: cardKey)
+                    cardViewLookup[indexOfCard].1 = .showMismatch(card: cardKey)
                 case .isMatched:
-                    let cardState = cardDisplays[cardViewIndex].displayState
-                        switch cardState {
-                        case .showCard:
-                            cardDisplays[cardViewIndex].displayState = .showMatch(card: cardKey)
-                        case .showSelectedCard:
-                            cardDisplays[cardViewIndex].displayState = .showMatch(card: cardKey)
-                        case .showMatch:
-                            if let removedIndex = playArea.cardViews.index(of: cardDisplays[cardViewIndex].view) {
-                                matchedCardIndices.append(removedIndex)
-                            }
-                            cardDisplays.remove(at: getIndexOfCardDisplay(displaying: cardKey, in: cardDisplays)!)
-                            playArea.remove(view: cardDisplays[cardViewIndex].view)
-                        default:
-                            break
-                        }
+                    switch cardViewLookup[indexOfCard].1 {
+                    case .showCard:
+                        cardViewLookup[indexOfCard].1 = .showMatch(card: cardKey)
+                    case .showSelectedCard:
+                        cardViewLookup[indexOfCard].1 = .showMatch(card: cardKey)
+                    case .showMatch:
+                        if let indexOfCardToRemove = playArea.cardViews.index(of: cardViewLookup[indexOfCard].0) {
+                            matchedCardIndices.append(indexOfCardToRemove)
+                        }/*
+                        playArea.remove(view: cardViewLookup[indexOfCard].0)
+                        cardViewLookup.remove(at: indexOfCard)*/
+                    default:
+                        break
+                    }
                 case .onTable:
-                    cardDisplays[cardViewIndex].displayState = .showCard(card: cardKey)
+                    cardViewLookup[indexOfCard].1 = .showCard(card: cardKey)
                 }
             } else {
                 switch cardStatus {
                 case .onTable:
-                    let newCardView: CardView
-                    if matchedCardIndices.count > 0 {
-                        newCardView = playArea.addCard(card: cardKey, at: matchedCardIndices.removeFirst())
-                    } else {
-                        newCardView = playArea.addCard(card: cardKey, at: playArea.cardViews.count)
-                    }
-                    let newCardDisplay = CardDisplay(view: newCardView, displayState: .showCard(card: cardKey))
-                    cardDisplays.append(newCardDisplay)
+                    print(matchedCardIndices)
+                    let newCardView = playArea.addCard(card: cardKey, at: playArea.cardViews.count)
+                    cardViewLookup.append((newCardView, DisplayState.showCard(card: cardKey)))
                     let tap = cardTapGesture(target: self, action: #selector(selectCard))
                     tap.card = cardKey
                     newCardView.addGestureRecognizer(tap)
@@ -97,29 +91,26 @@ class ViewController: UIViewController {
                     break
                 }
             }
-            for cardDisplay in cardDisplays {
-                let outlineColor: UIColor
-                switch cardDisplay.displayState {
-                case .showSelectedCard:
-                    outlineColor = #colorLiteral(red: 0.9607843161, green: 0.7058823705, blue: 0.200000003, alpha: 1)
-                case .showMatch:
-                    outlineColor = #colorLiteral(red: 0.2588235438, green: 0.7568627596, blue: 0.9686274529, alpha: 1)
-                case .showMismatch:
-                    outlineColor = #colorLiteral(red: 0.9254902005, green: 0.2352941185, blue: 0.1019607857, alpha: 1)
-                default:
-                    outlineColor = #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1)
+            for cardView in playArea.cardViews {
+                if let indexOfCardView = getIndex(ofCard: nil, ofCardView: cardView, in: cardViewLookup) {
+                    switch cardViewLookup[indexOfCardView].1 {
+                    case.showCard:
+                        playArea.updateCard(in: cardView, number: nil, color: nil, fill: nil, shape: nil, outline: #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1))
+                    case .showSelectedCard:
+                        playArea.updateCard(in: cardView, number: nil, color: nil, fill: nil, shape: nil, outline: #colorLiteral(red: 0.9607843161, green: 0.7058823705, blue: 0.200000003, alpha: 1))
+                    case .showMatch:
+                        playArea.updateCard(in: cardView, number: nil, color: nil, fill: nil, shape: nil, outline: #colorLiteral(red: 0.2392156869, green: 0.6745098233, blue: 0.9686274529, alpha: 1))
+                    case .showMismatch:
+                        playArea.updateCard(in: cardView, number: nil, color: nil, fill: nil, shape: nil, outline: #colorLiteral(red: 0.7450980544, green: 0.1568627506, blue: 0.07450980693, alpha: 1))
+                    default:
+                        break
+                    }
                 }
-                playArea.updateCard(in: cardDisplay.view, number: nil, color: nil, fill: nil, shape: nil, outline: outlineColor)
             }
         }
         playArea.setNeedsDisplay()
         playArea.setNeedsLayout()
         scoreLabel.text = "Score: \(game.score)"
-        print("CardDisplay Cards:")
-        for cardDisplay in cardDisplays {
-            print(cardDisplay.displayState.getCard!.identifier)
-        }
-        print("********")
     }
     
     @objc private func selectCard(sender: cardTapGesture) {
@@ -127,24 +118,15 @@ class ViewController: UIViewController {
         updateViewFromModel()
     }
     
-    private func getIndexOfCardDisplay(displaying card: Card, in cardDisplays: [CardDisplay]) -> Int? {
-        for index in cardDisplays.indices {
-            if let displayedCard = cardDisplays[index].displayState.getCard {
-                if displayedCard == card {
-                    return index
-                }
+    private func getIndex(ofCard card: Card?, ofCardView view: CardView?, in lookupArray: [(CardView, DisplayState)]) -> Int? {
+        for index in lookupArray.indices {
+            if let cardToFind = card, let cardAtIndex = lookupArray[index].1.getCard {
+                if cardToFind == cardAtIndex {return index}
+            } else if let viewToFind = view {
+                if lookupArray[index].0 == viewToFind {return index}
             }
         }
         return nil
-    }
-}
-
-struct CardDisplay {
-    let view: CardView
-    var displayState: DisplayState
-    init(view: CardView, displayState: DisplayState) {
-        self.view = view
-        self.displayState = displayState
     }
 }
 

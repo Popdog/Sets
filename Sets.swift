@@ -19,11 +19,17 @@ class Sets {
     }
     private var matchInPreviousTouch = false
     private let penaltyForAMismatch = 5
+    private(set) var table: [Card] = []
+    private(set) var selected: [Card] = []
+    private(set) var mismatched: [Card] = []
+    private(set) var matched: [Card] = []
+    
     
     func choose(card: Card) {
         if matchInPreviousTouch == true {
             deal(cards: 3)
             matchInPreviousTouch = false
+            return
         }
         switch cards[card]! {
         case .isSelected:
@@ -44,11 +50,6 @@ class Sets {
                 break
             }
         }
-        print("Selected:")
-        for selectedCard in selected {
-            print(selectedCard.identifier)
-        }
-        print("*****")
         if selected.count == 3 {
             if formASet(firstCard: selected[0], secondCard: selected[1], thirdCard: selected[2]) {
                 cards[selected[0]] = .isMatched; cards[selected[1]] = .isMatched; cards[selected[2]] = .isMatched

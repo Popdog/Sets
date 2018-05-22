@@ -31,7 +31,6 @@ class tableView: UIView {
         newCard.fill = card.fill
         newCard.shape = card.shape
         newCard.outlineColor = #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1)
-        //cardViews.append(newCard)
         cardViews.insert(newCard, at: index)
         self.addSubview(newCard)
         displayCards()
