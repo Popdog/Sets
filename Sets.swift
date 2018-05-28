@@ -29,7 +29,6 @@ class Sets {
         if matchInPreviousTouch == true {
             deal(cards: 3)
             matchInPreviousTouch = false
-            return
         }
         switch cards[card]! {
         case .isSelected:

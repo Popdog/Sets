@@ -22,7 +22,6 @@ class tableView: UIView {
     }
     
     func addCard(card: Card, at index: Int) -> CardView {
-        let index = grid.cellCount
         grid.cellCount += 1
         let newCard = CardView(frame: grid[index]!.insetBy(dx: cardInset(), dy: cardInset()))
         newCard.backgroundColor = UIColor.clear
@@ -69,5 +68,10 @@ class tableView: UIView {
             cardViews.remove(at: cardViews.index(of: view)!)
         }
         grid.cellCount = 0
+    }
+    
+    @objc func shuffleCardViews() {
+        cardViews = cardViews.shuffle
+        displayCards()
     }
 }

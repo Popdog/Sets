@@ -10,6 +10,7 @@ import UIKit
 
 @IBDesignable
 class CardView: UIView {
+    override var description: String {return "\(number) \(fill) \(color) \(shape)(s)"}
     var number: Number = .one
     var shape: Shape = .squiggle
     var fill: Fill = .striped

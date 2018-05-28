@@ -8,7 +8,9 @@
 
 import Foundation
 
-struct Card: Hashable {
+struct Card: Hashable, CustomStringConvertible {
+    var description: String {return "\(number) \(fill) \(color) \(shape)(s)"}
+    
     let number: Number
     let color: Color
     let shape: Shape
