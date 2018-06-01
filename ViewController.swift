@@ -33,20 +33,26 @@ class ViewController: UIViewController {
     
     @IBOutlet weak var newGameButton: UIButton! { //Add border and shadow to newGameButton
         didSet{
-            newGameButton.addShadow(withColor: UIButton.shadowColor, withRadius: UIButton.shadowRadius, withOffset: UIButton.shadowOffset, withOpacity: UIButton.shadowOpacity)
+            newGameButton.addShadow(withColor: UIView.shadowColor, withRadius: UIView.shadowRadius, withOffset: UIView.shadowOffset, withOpacity: UIView.shadowOpacity)
             newGameButton.addBorder(withColor: #colorLiteral(red: 0.2549019754, green: 0.2745098174, blue: 0.3019607961, alpha: 1), withWidth: 2.0)
             newGameButton.layer.cornerRadius = 8.0
         }
     }
     @IBOutlet weak var dealButton: UIButton! { //Add border and shadow to dealButton
         didSet{
-            dealButton.addShadow(withColor: UIButton.shadowColor, withRadius: UIButton.shadowRadius, withOffset: UIButton.shadowOffset, withOpacity: UIButton.shadowOpacity)
+            dealButton.addShadow(withColor: UIView.shadowColor, withRadius: UIView.shadowRadius, withOffset: UIButton.shadowOffset, withOpacity: UIView.shadowOpacity)
             dealButton.addBorder(withColor: #colorLiteral(red: 0.2549019754, green: 0.2745098174, blue: 0.3019607961, alpha: 1), withWidth: 2.0)
             dealButton.layer.cornerRadius = 8.0
         }
     }
     
-    @IBOutlet weak var scoreLabel: UILabel!
+    @IBOutlet weak var scoreLabel: UILabel! {
+        didSet{
+            scoreLabel.addShadow(withColor: UIView.shadowColor, withRadius: UIView.shadowRadius, withOffset: UIButton.shadowOffset, withOpacity: UIView.shadowOpacity)
+            scoreLabel.addBorder(withColor: #colorLiteral(red: 0.2549019754, green: 0.2745098174, blue: 0.3019607961, alpha: 1), withWidth: 2.0)
+            scoreLabel.layer.cornerRadius = 4.0
+        }
+    }
     
     @IBAction func newGame(_ sender: UIButton) { // On starting a new game...
         cardViewLookup = [] //Empty the card view lookup array
@@ -184,7 +190,7 @@ extension DisplayState {
     }
 }
 
-extension UIButton {
+extension UIView {
     static let shadowRadius: CGFloat = 2.0
     static let shadowOffset: CGSize = CGSize(width: 1.0, height: 1.0)
     static let shadowColor: CGColor = #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1)

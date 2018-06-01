@@ -6,6 +6,7 @@
     <dependencies>
         <deployment identifier="iOS"/>
         <plugIn identifier="com.apple.InterfaceBuilder.IBCocoaTouchPlugin" version="14088"/>
+        <capability name="Aspect ratio constraints" minToolsVersion="5.1"/>
         <capability name="Safe area layout guides" minToolsVersion="9.0"/>
         <capability name="documents saved in the Xcode 8 format" minToolsVersion="8.0"/>
     </dependencies>
@@ -19,8 +20,12 @@
                         <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
                         <subviews>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="5K5-NG-Qq0">
-                                <rect key="frame" x="120.5" y="601" width="134" height="46"/>
+                                <rect key="frame" x="107" y="592" width="160" height="55"/>
                                 <color key="backgroundColor" red="0.75406885150000003" green="0.75408679249999999" blue="0.75407713649999997" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" priority="750" constant="160" id="Ker-xr-i1y"/>
+                                    <constraint firstAttribute="width" secondItem="5K5-NG-Qq0" secondAttribute="height" multiplier="67:23" id="L7c-El-22U"/>
+                                </constraints>
                                 <fontDescription key="fontDescription" type="system" pointSize="28"/>
                                 <state key="normal" title="New Game"/>
                                 <connections>
@@ -28,24 +33,20 @@
                                 </connections>
                             </button>
                             <button opaque="NO" contentMode="scaleToFill" contentHorizontalAlignment="center" contentVerticalAlignment="center" buttonType="roundedRect" lineBreakMode="middleTruncation" translatesAutoresizingMaskIntoConstraints="NO" id="ght-Ur-d22">
-                                <rect key="frame" x="16" y="608" width="62" height="39"/>
+                                <rect key="frame" x="16" y="600" width="75" height="47"/>
                                 <color key="backgroundColor" red="0.75406885150000003" green="0.75408679249999999" blue="0.75407713649999997" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" secondItem="ght-Ur-d22" secondAttribute="height" multiplier="62:39" id="aAL-bZ-R5C"/>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" priority="750" constant="75" id="qAt-nX-g27"/>
+                                </constraints>
                                 <fontDescription key="fontDescription" type="system" pointSize="22"/>
                                 <state key="normal" title="Deal 3"/>
                                 <connections>
                                     <action selector="dealCards:" destination="BYZ-38-t0r" eventType="touchUpInside" id="dw2-iq-qyg"/>
                                 </connections>
                             </button>
-                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Score: 0" textAlignment="natural" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Uyh-4f-SbB">
-                                <rect key="frame" x="297.5" y="624.5" width="68.5" height="22.5"/>
-                                <fontDescription key="fontDescription" type="system" pointSize="18"/>
-                                <color key="textColor" red="0.0" green="0.58980089430000004" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                <nil key="highlightedColor"/>
-                                <color key="shadowColor" red="0.0" green="0.0" blue="0.0" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
-                                <size key="shadowOffset" width="1" height="1"/>
-                            </label>
                             <view contentMode="redraw" translatesAutoresizingMaskIntoConstraints="NO" id="TqO-os-3vI" customClass="tableView" customModule="Sets" customModuleProvider="target">
-                                <rect key="frame" x="10" y="30" width="355" height="551"/>
+                                <rect key="frame" x="10" y="30" width="355" height="542"/>
                                 <color key="backgroundColor" white="1" alpha="1" colorSpace="custom" customColorSpace="genericGamma22GrayColorSpace"/>
                                 <gestureRecognizers/>
                                 <constraints>
@@ -56,12 +57,24 @@
                                     <outletCollection property="gestureRecognizers" destination="LkY-vb-2K5" appends="YES" id="GmH-RZ-vRf"/>
                                 </connections>
                             </view>
+                            <label opaque="NO" userInteractionEnabled="NO" contentMode="left" horizontalHuggingPriority="251" verticalHuggingPriority="251" text="Score: 0" textAlignment="center" lineBreakMode="tailTruncation" baselineAdjustment="alignBaselines" adjustsFontSizeToFit="NO" translatesAutoresizingMaskIntoConstraints="NO" id="Uyh-4f-SbB">
+                                <rect key="frame" x="272" y="616" width="94" height="31"/>
+                                <color key="backgroundColor" red="0.75406885150000003" green="0.75408679249999999" blue="0.75407713649999997" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <constraints>
+                                    <constraint firstAttribute="width" secondItem="Uyh-4f-SbB" secondAttribute="height" multiplier="79:26" id="RgG-fH-U3O"/>
+                                    <constraint firstAttribute="width" relation="greaterThanOrEqual" priority="750" constant="100" id="lYl-vf-eID"/>
+                                </constraints>
+                                <fontDescription key="fontDescription" type="system" pointSize="22"/>
+                                <color key="textColor" red="0.0" green="0.58980089430000004" blue="1" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
+                                <nil key="highlightedColor"/>
+                                <size key="shadowOffset" width="1" height="1"/>
+                            </label>
                         </subviews>
                         <color key="backgroundColor" red="0.92143100499999997" green="0.92145264149999995" blue="0.92144101860000005" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
                         <constraints>
-                            <constraint firstItem="Uyh-4f-SbB" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="5K5-NG-Qq0" secondAttribute="trailing" constant="8" id="AMl-Bf-MzM"/>
+                            <constraint firstItem="Uyh-4f-SbB" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="5K5-NG-Qq0" secondAttribute="trailing" constant="5" id="AMl-Bf-MzM"/>
                             <constraint firstItem="6Tk-OE-BBY" firstAttribute="trailing" secondItem="Uyh-4f-SbB" secondAttribute="trailing" constant="9" id="ISx-4P-de5"/>
-                            <constraint firstItem="5K5-NG-Qq0" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="ght-Ur-d22" secondAttribute="trailing" constant="10" id="Krc-Ul-YNg"/>
+                            <constraint firstItem="5K5-NG-Qq0" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="ght-Ur-d22" secondAttribute="trailing" constant="5" id="Krc-Ul-YNg"/>
                             <constraint firstItem="ght-Ur-d22" firstAttribute="leading" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="16" id="Mnw-Xe-P8i"/>
                             <constraint firstItem="TqO-os-3vI" firstAttribute="leading" relation="greaterThanOrEqual" secondItem="6Tk-OE-BBY" secondAttribute="leading" constant="10" id="RI5-8o-Xeg"/>
                             <constraint firstItem="5K5-NG-Qq0" firstAttribute="centerX" secondItem="6Tk-OE-BBY" secondAttribute="centerX" id="SVM-zQ-nUq"/>
