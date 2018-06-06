@@ -21,19 +21,23 @@ class tableView: UIView {
         displayCards()
     }
     
-    func addCard(card: Card, at index: Int) -> CardView {
-        grid.cellCount += 1
-        let newCard = CardView(frame: grid[index]!.insetBy(dx: cardInset(), dy: cardInset()))
-        newCard.backgroundColor = UIColor.clear
-        newCard.color = card.color
-        newCard.number = card.number
-        newCard.fill = card.fill
-        newCard.shape = card.shape
-        newCard.outlineColor = #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1)
-        cardViews.insert(newCard, at: index)
-        self.addSubview(newCard)
-        displayCards()
-        return newCard
+    func addCardView(cardView: CardView, at index: Int) {
+        UIView.animate(withDuration: 0.5, animations: {
+            self.grid.cellCount += 1
+            cardView.outlineColor = #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1)
+            cardView.backgroundColor = #colorLiteral(red: 0.9999960065, green: 1, blue: 1, alpha: 1)
+            self.cardViews.insert(cardView, at: index)
+            cardView.frame = self.grid[index]!.insetBy(dx: self.cardInset(), dy: self.cardInset())
+            self.displayCards()
+        }, completion: { finished in
+            UIView.transition(with: cardView,
+                              duration: 0.25,
+                              options: [.transitionFlipFromLeft],
+                              animations: {
+                                cardView.isFaceUp = true
+                                cardView.setNeedsDisplay()
+            })
+        })
     }
     
     func updateCard(in view: CardView, number: Number?, color: Color?, fill: Fill?, shape: Shape?, outline: UIColor?) {
@@ -48,10 +52,31 @@ class tableView: UIView {
     
     func remove(view: CardView) {
         if let index = cardViews.index(of: view) {
-            grid.cellCount -= 1
-            cardViews[index].removeFromSuperview()
+            UIView.animate(withDuration: 0.5, animations: {
+                self.grid.cellCount -= 1
+                self.cardViews.remove(at: index)
+                self.displayCards()
+            })
+        }
+    }
+    
+    func replace(viewToReplace: CardView, with viewToInsert: CardView) {
+        if let index = cardViews.index(of: viewToReplace) {
             cardViews.remove(at: index)
-            displayCards()
+            UIView.animate(withDuration: 0.5, animations: {
+                viewToInsert.outlineColor = #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1)
+                viewToInsert.backgroundColor = #colorLiteral(red: 0.9999960065, green: 1, blue: 1, alpha: 1)
+                self.cardViews.insert(viewToInsert, at: index)
+                viewToInsert.frame = self.grid[index]!.insetBy(dx: self.cardInset(), dy: self.cardInset())
+            }, completion: { finished in
+                UIView.transition(with: viewToInsert,
+                                  duration: 0.25,
+                                  options: [.transitionFlipFromLeft],
+                                  animations: {
+                                    viewToInsert.isFaceUp = true
+                                    viewToInsert.setNeedsDisplay()
+                })
+            })
         }
     }
     

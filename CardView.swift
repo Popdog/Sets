@@ -18,37 +18,44 @@ class CardView: UIView {
     var outlineColor: UIColor = #colorLiteral(red: 0, green: 0, blue: 0, alpha: 1)
     static let shapeInset: CGFloat = 5.0
     static let stripeWidth: CGFloat = 3.0
+    var isFaceUp = false
     
     override func draw(_ rect: CGRect) {
-        let outlinePath = UIBezierPath.init(roundedRect: bounds, cornerRadius: (bounds.maxX - bounds.minX)/4)
-        outlineColor.setStroke()
-        outlinePath.lineWidth = (bounds.maxX - bounds.minX) / 20
-        outlinePath.stroke()
-        
-        let path = createPath(in: Grid(layout: .dimensions(rowCount: 3, columnCount: 1), frame: bounds))
-        var strokeColor: UIColor
-
-        switch color {
-        case .green:
-            strokeColor = UIColor.green
-        case .purple:
-            strokeColor = UIColor.purple
-        case .red:
-            strokeColor = UIColor.red
-        }
-        strokeColor.setStroke()
-        path.stroke()
-        
-        switch fill {
-        case .solid:
-            strokeColor.setFill()
-            path.fill()
-        case .striped:
-            path.addClip()
-            let stripePath = addStripes(in: rect)
-            stripePath.stroke()
-        case .empty:
-            break
+        if isFaceUp {
+            let outlinePath = UIBezierPath.init(roundedRect: bounds, cornerRadius: (bounds.maxX - bounds.minX)/4)
+            outlineColor.setStroke()
+            outlinePath.lineWidth = (bounds.maxX - bounds.minX) / 20
+            outlinePath.stroke()
+            
+            let path = createPath(in: Grid(layout: .dimensions(rowCount: 3, columnCount: 1), frame: bounds))
+            var strokeColor: UIColor
+            
+            switch color {
+            case .green:
+                strokeColor = UIColor.green
+            case .purple:
+                strokeColor = UIColor.purple
+            case .red:
+                strokeColor = UIColor.red
+            }
+            strokeColor.setStroke()
+            path.stroke()
+            
+            switch fill {
+            case .solid:
+                strokeColor.setFill()
+                path.fill()
+            case .striped:
+                path.addClip()
+                let stripePath = addStripes(in: rect)
+                stripePath.stroke()
+            case .empty:
+                break
+            }
+        } else {
+            if let cardBackImage = UIImage(named: "cardBack", in: Bundle(for: self.classForCoder), compatibleWith: traitCollection) {
+                cardBackImage.draw(in: bounds)
+            }
         }
 
     }

@@ -23,13 +23,15 @@ class Sets {
     private(set) var selected: [Card] = []
     private(set) var mismatched: [Card] = []
     private(set) var matched: [Card] = []
-    
+    var deckIsEmpty: Bool {
+        if cards.count == 81 {
+            return true
+        } else {
+            return false
+        }
+    }
     
     func choose(card: Card) {
-        if matchInPreviousTouch == true {
-            deal(cards: 3)
-            matchInPreviousTouch = false
-        }
         switch cards[card]! {
         case .isSelected:
             cards[card] = .onTable
@@ -53,7 +55,7 @@ class Sets {
             if formASet(firstCard: selected[0], secondCard: selected[1], thirdCard: selected[2]) {
                 cards[selected[0]] = .isMatched; cards[selected[1]] = .isMatched; cards[selected[2]] = .isMatched
                 score += pointsForAMatch()
-                matchInPreviousTouch = true
+                deal(cards: 3)
             } else {
                 score -= penaltyForAMismatch
                 cards[selected[0]] = .isMismatched; cards[selected[1]] = .isMismatched; cards[selected[2]] = .isMismatched
@@ -61,7 +63,6 @@ class Sets {
         }
     }
     func deal(cards numberOfCards: Int) {
-        matchInPreviousTouch = false
         for (cardKey, cardStatus) in cards {
             switch cardStatus {
             case .isMismatched:
