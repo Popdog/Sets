@@ -90,7 +90,6 @@ class Sets {
 }
 
 func formASet(firstCard: Card, secondCard: Card, thirdCard: Card) -> Bool {
-    return true
     let colorIndex = (firstCard.color == secondCard.color && secondCard.color == thirdCard.color) || (firstCard.color != secondCard.color && firstCard.color != thirdCard.color && secondCard.color != thirdCard.color)
     let shapeIndex = (firstCard.shape == secondCard.shape && secondCard.shape == thirdCard.shape) || (firstCard.shape != secondCard.shape && firstCard.shape != thirdCard.shape && secondCard.shape != thirdCard.shape)
     let numberIndex = (firstCard.number == secondCard.number && secondCard.number == thirdCard.number) || (firstCard.number != secondCard.number && firstCard.number != thirdCard.number && secondCard.number != thirdCard.number)
